@@ -30,6 +30,7 @@ func NewGraph() *Graph {
 		Nodes:         make(map[NodeID]Node),
 		Edges:         []Edge{},
 		IncomingEdges: make(map[NodeID][]Edge),
+		OutgoingEdges: make(map[NodeID][]Edge),
 	}
 }
 
@@ -174,27 +175,4 @@ func (g *Graph) GetIncomingEdges(id NodeID) []Edge {
 
 func (g *Graph) GetOutgoingEdges(id NodeID) []Edge {
 	return g.OutgoingEdges[id]
-}
-
-func main() {
-	my_graph := NewGraph()
-	fmt.Println("Populating graph with nodes: ")
-	my_graph.AddNode(1, 4)
-	my_graph.AddNode(2, 5)
-	my_graph.AddNode(3, 6)
-	fmt.Println("\n", my_graph.String())
-
-	fmt.Println("Adding edges: ")
-	my_graph.AddEdge(1, 2, 3)
-	my_graph.AddEdge(2, 3, 4)
-	my_graph.AddEdge(1, 3, 5)
-	my_graph.AddEdge(2, 1, 7)
-	my_graph.AddEdge(3, 2, 6)
-	fmt.Println("\n", my_graph.String())
-
-	fmt.Println("Removing node: ")
-	my_graph.RemoveNode(1)
-	fmt.Println("\n", my_graph.String())
-
-	fmt.Println("Program done")
 }
