@@ -11,6 +11,7 @@ type Graph struct {
 	Nodes         map[NodeID]Node
 	Edges         []Edge
 	IncomingEdges map[NodeID][]Edge
+	OutgoingEdges map[NodeID][]Edge
 }
 
 type Node struct {
@@ -48,27 +49,24 @@ func (g *Graph) AddEdge(from, to NodeID, weight float64) {
 	}
 	g.Edges = append(g.Edges, Edge{To: to, From: from, Weight: weight})
 	g.IncomingEdges[to] = append(g.IncomingEdges[to], Edge{To: to, From: from, Weight: weight})
+	g.OutgoingEdges[from] = append(g.OutgoingEdges[from], Edge{To: to, From: from, Weight: weight})
 }
 
-func (g *Graph) RemoveNode(id NodeID) *Graph {
+func (g *Graph) RemoveNode(id NodeID) {
 	delete(g.Nodes, id)
 
 	g.Edges = filterEdges(g.Edges, func(edge Edge) bool {
 		return edge.From != id
 	})
 
-	incomingEdges := g.IncomingEdges[id]
-	for _, edge := range incomingEdges {
-		g.Edges = filterEdges(g.Edges, func(e Edge) bool {
-			return !(e.From == edge.From && e.To == edge.To)
-		})
-		g.IncomingEdges[edge.From] = filterEdges(g.IncomingEdges[edge.From], func(e Edge) bool {
-			return !(e.To == edge.From && e.From == edge.To)
+	for _, edge := range g.IncomingEdges[id] {
+		g.OutgoingEdges[edge.From] = filterEdges(g.OutgoingEdges[edge.From], func(e Edge) bool {
+			return e.To != id
 		})
 	}
-	delete(g.IncomingEdges, id)
 
-	return g
+	delete(g.OutgoingEdges, id)
+	delete(g.IncomingEdges, id)
 }
 
 func filterEdges(edges []Edge, predicate func(Edge) bool) []Edge {
@@ -82,28 +80,58 @@ func filterEdges(edges []Edge, predicate func(Edge) bool) []Edge {
 	return filtered
 }
 
-// func (g *Graph) RemoveEdge(from, to NodeID) *Graph
+func (g *Graph) RemoveEdge(from, to NodeID) {
+	g.Edges = filterEdges(g.Edges, func(e Edge) bool {
+		return !(e.From == from && e.To == to)
+	})
 
-// func (g *Graph) GetNode(id NodeID) (Node, bool)
+	g.IncomingEdges[to] = filterEdges(g.IncomingEdges[to], func(e Edge) bool {
+		return !(e.From == from && e.To == to)
+	})
 
-// func (g *Graph) GetEdges(id NodeID) []Edge
+	g.OutgoingEdges[from] = filterEdges(g.OutgoingEdges[from], func(e Edge) bool {
+		return !(e.From == from && e.To == to)
+	})
+}
 
-// func (g *Graph) GetAdjacentNodes(id NodeID) []Node
+func (g *Graph) GetNode(id NodeID) (Node, bool) {
+	node, ok := g.Nodes[id]
+	if !ok {
+		return Node{}, false
+	}
+	return node, true
+}
 
-// func (g *Graph) HasNode(id NodeID) bool
+func (g *Graph) GetAdjacentNodes(id NodeID) []Node {
+	n := []Node{}
+	for _, edge := range g.GetOutgoingEdges(id) {
+		n = append(n, g.Nodes[edge.To])
+	}
 
-// func (g *Graph) HasEdge(from, to NodeID) bool
+	return n
+}
 
 func (g *Graph) GetNodeCount() int {
 	return len(g.Nodes)
 }
 
 func (g *Graph) GetEdgeCount() int {
-	numEdges := 0
-	for _, edges := range g.IncomingEdges {
-		numEdges += len(edges)
+	return len(g.Edges)
+}
+
+func (g *Graph) HasNode(id NodeID) bool {
+	_, hasNode := g.GetNode(id)
+	return hasNode
+}
+
+func (g *Graph) HasEdge(from, to NodeID) bool {
+	for _, edge := range g.Edges {
+		if edge.From == from && edge.To == to {
+			return true
+		}
 	}
-	return numEdges
+
+	return false
 }
 
 // func (g *Graph) DFS(startID NodeID, visit func(Node))
@@ -141,24 +169,11 @@ func (g *Graph) String() string {
 }
 
 func (g *Graph) GetIncomingEdges(id NodeID) []Edge {
-	var incomingEdges []Edge
-	for _, edge := range g.Edges {
-		if edge.To == id {
-			incomingEdges = append(incomingEdges, edge)
-		}
-	}
-	return incomingEdges
+	return g.IncomingEdges[id]
 }
 
 func (g *Graph) GetOutgoingEdges(id NodeID) []Edge {
-	var outgoingEdges []Edge
-	for _, edge := range g.Edges {
-		if edge.From == id {
-			outgoingEdges = append(outgoingEdges, edge)
-		}
-	}
-
-	return outgoingEdges
+	return g.OutgoingEdges[id]
 }
 
 func main() {
