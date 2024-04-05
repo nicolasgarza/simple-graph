@@ -135,9 +135,51 @@ func (g *Graph) HasEdge(from, to NodeID) bool {
 	return false
 }
 
-// func (g *Graph) DFS(startID NodeID, visit func(Node))
+func (g *Graph) DFS(startNodeID NodeID, visit func(node Node)) {
+	visited := make(map[NodeID]bool)
+	stack := []NodeID{startNodeID}
 
-// func (g *Graph) BFS(startID NodeID, visit func(Node))
+	for len(stack) > 0 {
+		nodeID := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		_, ok := visited[nodeID]
+		if !ok {
+			visited[nodeID] = true
+			node, _ := g.GetNode(nodeID)
+			visit(node)
+			for _, adjNode := range g.GetAdjacentNodes(nodeID) {
+				_, ok := visited[adjNode.ID]
+				if !ok {
+					stack = append(stack, adjNode.ID)
+				}
+			}
+		}
+	}
+}
+
+func (g *Graph) BFS(startNodeID NodeID, visit func(node Node)) {
+	visited := make(map[NodeID]bool)
+	queue := []NodeID{startNodeID}
+
+	for len(queue) > 0 {
+		nodeID := queue[0]
+		queue = queue[1:]
+
+		_, ok := visited[nodeID]
+		if !ok {
+			visited[nodeID] = true
+			node, _ := g.GetNode(nodeID)
+			visit(node)
+			for _, adjNode := range g.GetAdjacentNodes(nodeID) {
+				_, ok := visited[adjNode.ID]
+				if !ok {
+					queue = append(queue, adjNode.ID)
+				}
+			}
+		}
+	}
+}
 
 func (g *Graph) String() string {
 	var sb strings.Builder

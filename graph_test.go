@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -106,5 +107,47 @@ func TestHasEdge(t *testing.T) {
 
 	if g.HasEdge(2, 1) {
 		t.Errorf("Expected edge from node 2 to node 1 to not exist")
+	}
+}
+
+func TestDFS(t *testing.T) {
+	g := NewGraph()
+	g.AddNode(1, "Node 1")
+	g.AddNode(2, "Node 2")
+	g.AddNode(3, "Node 3")
+	g.AddNode(4, "Node 4")
+	g.AddEdge(1, 2, 1.0)
+	g.AddEdge(1, 3, 1.0)
+	g.AddEdge(2, 4, 1.0)
+
+	var visited []NodeID
+	g.DFS(1, func(node Node) {
+		visited = append(visited, node.ID)
+	})
+
+	expectedVisited := []NodeID{1, 3, 2, 4}
+	if !reflect.DeepEqual(visited, expectedVisited) {
+		t.Errorf("Expected DFS visit order %v, got %v", expectedVisited, visited)
+	}
+}
+
+func TestBFS(t *testing.T) {
+	g := NewGraph()
+	g.AddNode(1, "Node 1")
+	g.AddNode(2, "Node 2")
+	g.AddNode(3, "Node 3")
+	g.AddNode(4, "Node 4")
+	g.AddEdge(1, 2, 1.0)
+	g.AddEdge(1, 3, 1.0)
+	g.AddEdge(2, 4, 1.0)
+
+	var visited []NodeID
+	g.BFS(1, func(node Node) {
+		visited = append(visited, node.ID)
+	})
+
+	expectedVisited := []NodeID{1, 2, 3, 4}
+	if !reflect.DeepEqual(visited, expectedVisited) {
+		t.Errorf("Expected BFS visit order %v, got %v", expectedVisited, visited)
 	}
 }
